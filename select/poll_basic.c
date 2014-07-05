@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <poll.h>
+
+#define TIMEOUT 5	/* poll timeout, in seconds */
+
+/*
+ * This example uses poll to simultaneously check
+ * whether a read from stdin and a write to stdout
+ * will block.
+ */
+int main(void)
+{
+	struct pollfd fds[2];
+	int ret;
+
+	/* watch stdin for input */
+	fds[0].fd = STDIN_FILENO;
+	fds[0].events = POLLIN;
+
+	/* watch stdout for output */
+	fds[1].fd = STDOUT_FILENO;
+	fds[1].events = POLLOUT;
+
+	/* All set, block! */
+	ret = poll(fds, 2, TIMEOUT * 1000);
+	if (ret == -1) {
+		perror("poll");
+		return 1;
+	} else if (!ret) {
+		printf("%d seconds elapsed!\n", TIMEOUT);
+		return 0;
+	}
+
+	if (fds[0].revents & POLLIN)
+		printf("stdin is readable.\n");
+
+	if (fds[1].revents & POLLOUT)
+		printf("stdout is writable.\n");
+
+	return 0;
+}
